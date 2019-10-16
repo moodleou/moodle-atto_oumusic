@@ -1,0 +1,10 @@
+{
+  "name": "moodle-atto_oumusic-button",
+  "builds": {
+    "moodle-atto_oumusic-button": {
+      "jsfiles": [
+        "button.js"
+      ]
+    }
+  }
+}

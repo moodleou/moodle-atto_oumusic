@@ -1,0 +1,29 @@
+@font-face {
+    font-family: "Bravura";
+    src:
+        url('[[font:atto_oumusic|Bravura.eot]]?') format('ie8'),
+        url('[[font:atto_oumusic|Bravura.woff]]') format('woff'),
+        url('[[font:atto_oumusic|Bravura.eot]]') format('embedded-opentype');
+    unicode-range: U+E000-F8FF;
+}
+
+@font-face {
+    font-family: "Bravura Text";
+    src:
+        url('[[font:atto_oumusic|BravuraText.eot]]?') format('ie8'),
+        url('[[font:atto_oumusic|BravuraText.woff]]') format('woff'),
+        url('[[font:atto_oumusic|BravuraText.eot]]') format('embedded-opentype');
+    unicode-range: U+E000-F8FF;
+}
+
+.atto_oumusic_wrapper {
+    font-family: sans-serif, Bravura Text;
+}
+
+.atto_oumusic_library button.atto_oumusic_character {
+    font-family: Bravura;
+    font-size: 150%;
+    width: 3.2em;
+    margin: 0.1em;
+    height: 3em;
+}
