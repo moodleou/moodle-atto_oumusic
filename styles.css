@@ -2,6 +2,7 @@
     font-family: "Bravura";
     src:
         url('[[font:atto_oumusic|Bravura.eot]]?') format('ie8'),
+        url('[[font:atto_oumusic|Bravura.woff2]]') format('woff2'),
         url('[[font:atto_oumusic|Bravura.woff]]') format('woff'),
         url('[[font:atto_oumusic|Bravura.eot]]') format('embedded-opentype');
     unicode-range: U+E000-F8FF;
@@ -11,6 +12,7 @@
     font-family: "Bravura Text";
     src:
         url('[[font:atto_oumusic|BravuraText.eot]]?') format('ie8'),
+        url('[[font:atto_oumusic|BravuraText.woff2]]') format('woff2'),
         url('[[font:atto_oumusic|BravuraText.woff]]') format('woff'),
         url('[[font:atto_oumusic|BravuraText.eot]]') format('embedded-opentype');
     unicode-range: U+E000-F8FF;
