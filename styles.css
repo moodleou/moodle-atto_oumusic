@@ -34,3 +34,11 @@
 .atto_oumusic_library div[id*="atto_oumusic_group_individualNotes"] button.atto_oumusic_character {
     height: 4.1em;
 }
+
+/* Add wording to the 'Recent' content */
+.atto_oumusic_library div[id*="atto_oumusic_group_recent_inner"] {
+    padding: 5px;
+    border: 1px solid gray;
+    background-color: white;
+    text-align: center;
+}

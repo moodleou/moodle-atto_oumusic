@@ -33,3 +33,6 @@ $string['characterranges'] = 'Character ranges';
 $string['characterranges_desc'] = 'Character ranges to include in the editor as defined by the Standard Music Font Layout';
 
 $string['standardAccidentals12Edo'] = 'Standard accidentals';
+
+$string['recent'] = 'Recent';
+$string['recently_selected_symbols'] = 'Your most recently selected symbols';

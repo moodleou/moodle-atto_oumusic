@@ -25,6 +25,10 @@ YUI.add('moodle-atto_oumusic-button', function (Y, NAME) {
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+var RECENT_OUMUSIC_STORAGE_KEY = 'moodle-recent-oumusic';
+var MAX_RECENT_COUNT = 10;
+var localstorage;
+
 var COMPONENTNAME = 'atto_oumusic',
     CSS = {
         CHARACTER: COMPONENTNAME + '_character',
@@ -100,7 +104,7 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
      */
     _groupFocus: null,
 
-    initializer: function () {
+    initializer: function() {
         if (!this.get('capability')) {
             return;
         }
@@ -131,11 +135,15 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
      * @method _displayDialogue
      * @private
      */
-    _displayDialogue: function () {
+    _displayDialogue: function() {
         // Store the current selection.
         this._currentSelection = this.get('host').getSelection();
         if (this._currentSelection === false) {
             return;
+        }
+
+        if (!localstorage) {
+            localstorage = require('core/localstorage');
         }
 
         var dialogue = this.getDialogue({
@@ -151,6 +159,45 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
             srcNode: content
         });
 
+        // Add 'Recent' to tab view.
+        var labelText = M.util.get_string('recent', COMPONENTNAME);
+        var title = M.util.get_string('recent', COMPONENTNAME);
+        // The href is created, but doesn't get set for the tab.
+        var href = '#' + CSS.LIBRARY_GROUP_PREFIX + '_recent';
+        // Get ou recent music.
+        var recentcontent = this.getRecentOUMusic();
+        var buttons = '';
+
+        var tabtext = M.util.get_string('recently_selected_symbols', COMPONENTNAME);
+        var tabinnerdiv = '<div id="atto_oumusic_group_recent_inner">' + tabtext + '</div>';
+
+        // Create the Recent buttons.
+        if (recentcontent) {
+            buttons = tabinnerdiv;
+            for (var i = 0; i < recentcontent.length; i++) {
+                // Need to get tile and code
+                var buttontitle = recentcontent[i].title;
+                var dcharacter = recentcontent[i].character;
+                // Converts the data character glyph to a string, We need both in creating the button.
+                var stresc = escape(dcharacter);
+                var res = stresc.slice(6);
+                var strreplace = res.replace("%3B", ";");
+                var ucode = "&amp#" + strreplace;
+                var character = String(ucode);
+                buttons = buttons +
+                    '<button class="btn btn-secondary btn-sm atto_oumusic_character" ' +
+                    ' tabindex="-1" ' +
+                    'aria-label="' + buttontitle + '" ' +
+                    'title="' + buttontitle + '"' +
+                    ' data-character="' + character + '">' + dcharacter +
+                    '</button>';
+            }
+        }
+
+        // Add Recent to tabview along with the content buttons.
+        var tab = new Y.Tab({label: labelText, href: href, content: buttons, title: title});
+        tab.get('panelNode').setAttribute('id', CSS.LIBRARY_GROUP_PREFIX + '_recent');
+        tabview.add(tab, 0);
         tabview.render();
         dialogue.show();
         // Trigger any JS filters to reprocess the new nodes.
@@ -164,7 +211,7 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
      * @private
      * @return {Node} The content to place in the dialogue.
      */
-    _getDialogueContent: function () {
+    _getDialogueContent: function() {
         var template = Y.Handlebars.compile(TEMPLATES.LIBRARY);
 
         var content = Y.Node.create(template({
@@ -196,9 +243,9 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
      * @param {EventFacade} e
      * @private
      */
-    _insertChar: function (e) {
-        var character = e.target.getData('character');
-        var wrapper = '<span class="' + CSS.WRAPPER + '">' + character + '</span>';
+    _insertChar: function(e) {
+        var dcharacter = e.target.getData('character');
+        var wrapper = '<span class="' + CSS.WRAPPER + '">' + dcharacter + '</span>';
 
         // Hide the dialogue.
         this.getDialogue({
@@ -215,6 +262,9 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
 
         // And mark the text area as updated.
         this.markUpdated();
+
+        // Add Character to recent list/array.
+        this.addCharacterToRecent(e);
     },
 
     /**
@@ -254,6 +304,7 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
      * Sets tab focus for the group.
      *
      * @method _setGroupTabFocus
+     * @param {Node} parent (group) node of the button that focus should now be set to.
      * @param {Node} button The node that focus should now be set to.
      * @private
      */
@@ -271,6 +322,58 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
         parent.setAttribute('aria-activedescendant', button.generateID());
     },
 
+    /**
+     * Add character to Recent.
+     *
+     * @method addCharacterToRecent
+     * @param {EventFacade} e includes character and title to be added to Recent
+     *
+     */
+    addCharacterToRecent: function(e) {
+        var recent = this.getRecentOUMusic();
+        var character = e.target.getAttribute('data-character');
+        var title = e.target.getAttribute('title');
+        var newcharacterobject = {'title': title, 'character': character};
+        var newRecentOUMusic = [newcharacterobject];
+
+        if (recent) {
+            for (var i = 0; i < recent.length; i++) {
+                // Check that new character is not already in local storage.
+                // Also check that all characters in local storage itself are valid.
+                if ((recent[i].character != character) && (typeof recent[i].character !== "undefined")
+                    && (recent[i].character.length > 1)) {
+                    // Push to new recent ou music.
+                    newRecentOUMusic.push(recent[i]);
+                }
+            }
+        }
+
+        // Limit the number of recent oumusic local storage to 10.
+        newRecentOUMusic = newRecentOUMusic.slice(0, MAX_RECENT_COUNT);
+        this.saveRecentOUMusic(newRecentOUMusic);
+    },
+
+    /**
+     * Get the list of recent OU Music data from local storage.
+     *
+     * @return {Array}
+     */
+    getRecentOUMusic: function() {
+        var storedData = [];
+        var storeddatastring = '';
+        storeddatastring = localstorage.get(RECENT_OUMUSIC_STORAGE_KEY);
+        storedData = JSON.parse(storeddatastring);
+        return storedData;
+    },
+
+    /**
+    * Save the list of recent OU Music in local storage.
+    *
+    * @param {Array} recentOUMusic List of oumusic data to save
+    */
+    saveRecentOUMusic: function(recentOUMusic) {
+        localstorage.set(RECENT_OUMUSIC_STORAGE_KEY, JSON.stringify(recentOUMusic));
+    },
 }, {
     ATTRS: {
         capability: {
@@ -279,5 +382,6 @@ Y.namespace('M.atto_oumusic').Button = Y.Base.create('button', Y.M.editor_atto.E
         metadata: {}
     }
 });
+
 
 }, '@VERSION@', {"requires": ["moodle-editor_atto-plugin", "moodle-core-event", "tabview"]});

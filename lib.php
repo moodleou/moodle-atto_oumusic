@@ -32,7 +32,9 @@ function atto_oumusic_strings_for_js() {
 
     $PAGE->requires->strings_for_js(
             array(
-                    'insertcharacter'
+                    'insertcharacter',
+                    'recent',
+                    'recently_selected_symbols'
             ),
             'atto_oumusic'
     );
